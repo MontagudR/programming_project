@@ -47,8 +47,8 @@ contains
 
     do i=1, size(eps)
         do j=1, size(eps)
-            A_vdw(i,j) = 4.d0 * (sqrt(eps(i)*eps(j))) * (2*sqrt(sigma(i)*sigma(j)))**12.d0
-            B_vdw(i,j) = 4.d0 * (sqrt(eps(i)*eps(j))) * (2*sqrt(sigma(i)*sigma(j)))**6.d0
+            A_vdw(i,j) = 4.d0 * (sqrt(eps(i)*eps(j))) * (2.d0*sqrt(sigma(i)*sigma(j)))**12.d0
+            B_vdw(i,j) = 4.d0 * (sqrt(eps(i)*eps(j))) * (2.d0*sqrt(sigma(i)*sigma(j)))**6.d0
         end do
     end do
     end subroutine initialize_parameters
