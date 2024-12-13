@@ -10,27 +10,27 @@ LASTF = -llapack -lblas
 EXEC = opt
 
 # Object files
-OBJS = parse_coordinates.o constants.o cartesian_gradient.o internal_gradient.o main.o
+OBJS = energy.o constants.o gradient.o functions.o main.o
 
 # Default target: Compile and link the program
 $(EXEC): $(OBJS)
 	$(FC) $(FFLAGS) -o $(EXEC) $(OBJS) $(LASTF)
 
 # Compile the module file
-parse_coordinates.o: parse_coordinates.f90
-	$(FC) $(FFLAGS) -c parse_coordinates.f90
+energy.o: energy.f90
+	$(FC) $(FFLAGS) -c energy.f90
 
 # Compile the module file
 constants.o: constants.f90
 	$(FC) $(FFLAGS) -c constants.f90
 
 # Compile the module file
-cartesian_gradient.o: cartesian_gradient.f90
-	$(FC) $(FFLAGS) -c cartesian_gradient.f90
+gradient.o: gradient.f90
+	$(FC) $(FFLAGS) -c gradient.f90 $(LASTF)
 
 # Compile the module file
-internal_gradient.o: internal_gradient.f90
-	$(FC) $(FFLAGS) -c internal_gradient.f90 $(LASTF)
+functions.o: functions.f90
+	$(FC) $(FFLAGS) -c functions.f90
 
 # Compile the main program file
 main.o: main.f90
