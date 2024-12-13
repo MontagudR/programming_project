@@ -12,7 +12,7 @@ program opt
     real*8, allocatable :: total_cart_grad(:, :), opt_coords(:, :), v_coords(:)
     integer, allocatable :: bonds(:, :), atomic_numbers(:), angles_list(:, :)
     integer, allocatable :: conectivity_m(:,:), dihedrals_list(:, :), vdw_list(:, :)
-    integer :: i, j, atom_num, n_q, n_x
+    integer :: atom_num, n_q, n_x
     real*8 :: total_energy=0.
     
     print *, "Welcome to the optimizer, please select a file: "
@@ -55,7 +55,7 @@ program opt
     ! Calculate the stretching, bending, torsion and VdW energies
     call calculate_bond_properties(v_coords, bonds, atomic_numbers, bonds_lengths, bond_energies)
     call calculate_angle_properties(angles_list, v_coords, atomic_numbers, angles, bending_energies)
-    call calculate_dihedral_properties(dihedrals_list, v_coords, atomic_numbers, dihedrals, torsion_energies)
+    call calculate_dihedral_properties(dihedrals_list, v_coords, dihedrals, torsion_energies)
     call calculate_vdw_energies(vdw_list, v_coords, atomic_numbers, vdw_energies)
 
     ! Sum everything to get the initial total energy of the molecule

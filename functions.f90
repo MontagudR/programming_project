@@ -340,12 +340,12 @@ function scan_torsions(index, s_q, n_q) result(new_sq)
 
 end function scan_torsions
 
-subroutine print_matrix(matrix, r, c) 
+subroutine print_matrix(matrix, r) 
     real*8, intent(in) :: matrix(:, :)
-    integer, intent(in) :: r, c
+    integer, intent(in) :: r
     character(len=100) :: filename, g
     character(len=5) numb
-    integer :: unit, i, j
+    integer :: unit, i
     ! Auxiliary function to print the matrix in the
     ! output.out file
 
@@ -372,7 +372,7 @@ subroutine print_vector(vector, r)
     integer, intent(in) :: r
     character(len=100) :: filename, g
     character(len=5) numb
-    integer :: unit, i, j
+    integer :: unit
     ! Auxiliary function to print the vector in the
     ! output.out file
 

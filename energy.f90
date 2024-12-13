@@ -70,12 +70,12 @@ real*8 function get_bending_energy(atom1, atom2, atom3, angle)
 
 end function get_bending_energy
 
-subroutine calculate_dihedral_properties(dihedral_list, coordinates, atomic_numbers, dihedrals, torsion_energy)
-    integer, intent(in) :: dihedral_list(:, :), atomic_numbers(:)
+subroutine calculate_dihedral_properties(dihedral_list, coordinates, dihedrals, torsion_energy)
+    integer, intent(in) :: dihedral_list(:, :)
     real*8, intent(in) ::  coordinates(:)
     real*8, intent(out) :: dihedrals(size(dihedral_list, 1)), torsion_energy(size(dihedral_list, 1))
     integer :: i, atom1, atom2, atom3, atom4
-    real*8 :: r_ab(3), r_bc(3), r_cd(3), t(3), u(3), v(3), tmp1, tmp2
+    real*8 :: r_ab(3), r_bc(3), r_cd(3)
     ! This function calculates the dihedral angles and the torsion energy from the list of dihedrals
 
     do i=1, size(dihedral_list, 1)
@@ -155,7 +155,7 @@ subroutine calculate_total_energy(bond_list, angle_list, torsion_list, vdw_list,
     ! Calculate all the individual terms
     call calculate_bond_properties(coordinates, bond_list, atomic_numbers, bonds_lengths, bond_energies)
     call calculate_angle_properties(angle_list, coordinates, atomic_numbers, angles, bending_energies)
-    call calculate_dihedral_properties(torsion_list, coordinates, atomic_numbers, dihedrals, torsion_energies)
+    call calculate_dihedral_properties(torsion_list, coordinates, dihedrals, torsion_energies)
     call calculate_vdw_energies(vdw_list, coordinates, atomic_numbers, vdw_energies)
 
     ! Sum everything to get the total energy
@@ -177,7 +177,7 @@ subroutine calculate_interanls_and_total_energy(bond_list, angle_list, torsion_l
     ! Calculate the individual terms for the energies and internal coordinates
     call calculate_bond_properties(coordinates, bond_list, atomic_numbers, bonds_lengths, bond_energies)
     call calculate_angle_properties(angle_list, coordinates, atomic_numbers, angles, bending_energies)
-    call calculate_dihedral_properties(torsion_list, coordinates, atomic_numbers, dihedrals, torsion_energies)
+    call calculate_dihedral_properties(torsion_list, coordinates, dihedrals, torsion_energies)
     call calculate_vdw_energies(vdw_list, coordinates, atomic_numbers, vdw_energies)
 
     ! Sum the individual contributions to get the total energies

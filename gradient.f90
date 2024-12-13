@@ -11,7 +11,7 @@ subroutine cart_bond_gradient(bond_list, coordinates, atomic_numbers, cart_bond_
     real*8, intent(in) :: coordinates(:)
     real*8, intent(out) :: cart_bond_grad(size(atomic_numbers)*3)
     integer :: i, atom1, atom2, at_num1, at_num2, ind1, ind2
-    real*8 :: r(3), grad(3)
+    real*8 :: r(3)
     ! This function calculates the stretching term of the cartesian gradient for all bonds.
     ! It returns an n_x vector with the cartesian gradient 
 
@@ -47,7 +47,7 @@ subroutine calculate_cart_angle_gradient(angle_list, coordinates, atomic_numbers
     real*8, intent(in) :: coordinates(:)
     real*8, intent(out) :: cart_angle_grad(size(atomic_numbers)*3)
     integer :: i, atom1, atom2, atom3, at_num1, at_num2, at_num3, ind1, ind2, ind3
-    real*8 :: r_ba(3), r_bc(3), angle, p(3), g_a(3), g_c(3), g_b(3), tmp
+    real*8 :: r_ba(3), r_bc(3), angle, p(3), tmp
     ! This function calculates the bending term of the cartesian gradient for all angles.
     ! It returns an n_x vector with the cartesian gradient 
 
@@ -104,7 +104,7 @@ subroutine calculate_cart_torsion_gradient(dihedral_list, coordinates, atomic_nu
     real*8, intent(in) :: coordinates(:)
     real*8, intent(out) :: cart_dihedral_grad(size(atomic_numbers)*3)
     integer :: i, atom1, atom2, atom3, atom4, ind1, ind2, ind3, ind4
-    real*8 :: r_ab(3), r_bc(3), r_cd(3), dihedral, v(3), t(3), u(3), r_ac(3), r_bd(3), tmp1(3), tmp2(3), grad
+    real*8 :: r_ab(3), r_bc(3), r_cd(3), dihedral, v(3), t(3), u(3), r_ac(3), r_bd(3), grad
     ! This function calculates the torsion term of the cartesian gradient for all dihedrals.
     ! It returns an n_x vector with the cartesian gradient 
 
@@ -227,11 +227,10 @@ subroutine cartesian_optimization(n_x, bond_list, angle_list, dihedral_list, vdw
     real*8, intent(in) :: coordinates(:)
     real*8, intent(out) :: final_coords(n_x) 
     real*8 :: inv_hes(n_x, n_x), gradient(n_x)
-    real*8 :: tmp_grad(n_x), p(n_x), tmp_p(n_x)
     real*8 :: total_energy=0., new_coords(n_x), alpha, new_total_energy, s(n_x)
     real*8 :: new_gradient(n_x), y(n_x), v(n_x), tmp, wolfe_rule
-    real*8 :: new_inv_hes(n_x, n_x), grms, coords(n_x)
-    integer :: i, j, k, num_atoms, count
+    real*8 :: new_inv_hes(n_x, n_x), grms, coords(n_x), p(n_x)
+    integer :: i, num_atoms, count
     ! This function performs the optimization using the cartesian gradient
 
     num_atoms = size(atomic_numbers)
@@ -313,10 +312,10 @@ subroutine cartesian_optimization(n_x, bond_list, angle_list, dihedral_list, vdw
 
 end subroutine cartesian_optimization
 
-subroutine build_B_matrix(n_x, n_q, b_l, a_l, d_l, vdw_l, coords, at_n, B)
-    integer, intent(in) :: b_l(:, :), a_l(: ,:), d_l(:, :), vdw_l(:, :), at_n(:), n_x, n_q
+subroutine build_B_matrix(n_x, n_q, b_l, a_l, d_l, coords, B)
+    integer, intent(in) :: b_l(:, :), a_l(: ,:), d_l(:, :), n_x, n_q
     real*8, intent(in) :: coords(:)
-    integer :: i, j, count, at_1, at_2, at_3, at_4, ind1, ind2, ind3, ind4
+    integer :: i, count, at_1, at_2, at_3, at_4, ind1, ind2, ind3, ind4
     real*8 :: r(3), p(3), r_ba(3), r_bc(3), r_ab(3), r_cd(3), r_bd(3), r_ac(3), t(3), u(3)
     real*8, intent(out) :: B(n_q, n_x)
     ! This function builds the Wilson B matrix. This matrix has n_q * n_x dimensions
@@ -457,7 +456,7 @@ subroutine find_opt_cart(b_l, a_l, d_l, vdw_l, at_n, n_q, n_x, q, new_q, s_q, B,
     real*8, intent(inout) :: x(:), new_q(:)
     real*8, intent(in) :: B(:, :), inv_G(:,:), q(:), s_q(:)
     integer, intent(in) :: n_q, n_x, at_n(:), b_l(:, :), a_l(:, :), d_l(:, :), vdw_l(:, :)
-    real*8 :: new_x(n_x), fix_q(n_q), tmp, new_sq(n_q), tmp_sq(n_q), diff
+    real*8 :: new_x(n_x), fix_q(n_q), tmp, new_sq(n_q), diff
     integer :: count
     ! This function performs the search for the optimal updated cartesian coordinates for 
     ! the optimization in internal coordinates. 
@@ -497,11 +496,11 @@ subroutine calculate_internal_gradient(n_x, n_q, b_l, a_l, d_l, vdw_l, i_coords,
     integer, intent(in) :: b_l(:, :), a_l(: ,:), d_l(:, :), vdw_l(:, :), at_n(:), n_q, n_x
     real*8, intent(in) :: i_coords(:)
     real*8 :: B(n_q, n_x), inv_G(n_q, n_q), inv_hess(n_q, n_q), p_q(n_q), s_q(n_q)
-    real*8  :: g_q(n_q), g_x(n_x), tmp_gx(n_x/3, 3), q(n_q), new_q(n_q), new_g_x(n_x), new_g_q(n_q)
+    real*8  :: g_q(n_q), g_x(n_x), q(n_q), new_q(n_q), new_g_x(n_x), new_g_q(n_q)
     real*8  :: new_B(n_q, n_x), new_inv_G(n_q, n_q), y_q(n_q), v_q(n_q), new_inv_hess(n_q, n_q)
-    real*8 :: lamda_max, l_q, tot_e, v_coords(size(i_coords)), coords(n_x)
+    real*8 :: lamda_max, l_q, tot_e, coords(n_x)
     real*8 :: new_tot_e, grms
-    integer :: i, j, num_at, count
+    integer :: i, num_at, count
     ! This function performs the optimization in internal coordinates.
 
     coords = i_coords
@@ -509,7 +508,7 @@ subroutine calculate_internal_gradient(n_x, n_q, b_l, a_l, d_l, vdw_l, i_coords,
     count = 0
 
     ! Construct the B matrix
-    call build_B_matrix(n_x, n_q, b_l, a_l, d_l, vdw_l, coords, at_n, B)
+    call build_B_matrix(n_x, n_q, b_l, a_l, d_l, coords, B)
     ! Calculate the number of atoms
     num_at = size(at_n)
     
@@ -548,7 +547,7 @@ subroutine calculate_internal_gradient(n_x, n_q, b_l, a_l, d_l, vdw_l, i_coords,
         s_q = scan_torsions(size(b_l, 1) + size(a_l, 1) + 1, s_q, n_q)
 
         ! Get the upgraded internal gradient
-        call build_B_matrix(n_x, n_q, b_l, a_l, d_l, vdw_l, coords, at_n, new_B)
+        call build_B_matrix(n_x, n_q, b_l, a_l, d_l, coords, new_B)
         call calculate_G_inv(new_B, n_q, new_inv_G)
         call calculate_total_energy(b_l, a_l, d_l, vdw_l, coords, at_n, new_tot_e) ! WARNING NO NEW_Q
         call calculate_cart_gradient(b_l, a_l, d_l, vdw_l, coords, at_n, new_g_x)
@@ -574,7 +573,7 @@ subroutine calculate_internal_gradient(n_x, n_q, b_l, a_l, d_l, vdw_l, i_coords,
         ! Update the hessian
         new_inv_hess = get_new_hessian(n_q, inv_hess, s_q, y_q, v_q)
 
-        call print_matrix(new_inv_hess, n_q, n_q)
+        call print_matrix(new_inv_hess, n_q)
 
         ! Assign the variables for the new iteration
         inv_hess = new_inv_hess; g_q = new_g_q; q = new_q; tot_e = new_tot_e
