@@ -4,11 +4,11 @@ module functions
     
 contains
     
-subroutine read_mol2(filename, coordinates, bonds, atomic_numbers)
+subroutine read_mol2(filename, coordinates, bonds, atomic_numbers, atom_symbols)
     character(len=100), intent(in) :: filename
     real*8, allocatable, intent(out) :: coordinates(:, :)
     integer, allocatable, intent(out) :: bonds(:, :), atomic_numbers(:)
-    character(len=3), allocatable :: atom_symbols(:)
+    character(len=3), allocatable, intent(out) :: atom_symbols(:)
     integer :: atom_num, bond_num, i
     ! This subroutine reads the modified mol2 file in which
     ! the first line has the number of atoms and bonds,
@@ -350,15 +350,12 @@ subroutine print_matrix(matrix, r)
     ! Get the correct format
     g = "(" // trim(numb) // "F12.6)"
     unit = 12
-    open(unit=unit, file=filename, status="unknown", position="append")
 
     do i=1, r
-        write(12, g) matrix(i, :)
+        write(unit, g) matrix(i, :)
     end do
 
-    write(12, *) " "
-
-    close(12)
+    write(unit, *) " "
 
 end subroutine print_matrix
 
@@ -377,12 +374,9 @@ subroutine print_vector(vector, r)
     ! Get the correct format
     g = "(" // trim(numb) // "F12.6)"
     unit = 12
-    open(unit=unit, file=filename, status="unknown", position="append")
 
-    write(12, g) vector(:)
-    write(12, *) " "
-
-    close(12)
+    write(unit, g) vector(:)
+    write(unit, *) " "
 
 end subroutine print_vector
 

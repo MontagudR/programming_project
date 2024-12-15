@@ -245,7 +245,7 @@ subroutine cartesian_optimization(n_x, bond_list, angle_list, dihedral_list, vdw
     ! Calculate the initial gradient
     call calculate_cart_gradient(bond_list, angle_list, dihedral_list, vdw_list, coords, atomic_numbers, gradient)
 
-    print *, "Starting iterations"
+    write(12, *) "Starting iterations"
     count = 0
     grms = sqrt(dot_product(gradient, gradient)/dble(n_x))
 
@@ -480,27 +480,24 @@ subroutine find_opt_cart(b_l, a_l, d_l, vdw_l, at_n, n_q, n_x, q, new_q, s_q, B,
         new_sq = scan_torsions(size(b_l, 1) + size(a_l, 1) + 1, new_sq, n_q)
 
         diff = maxval(abs(new_x - x))
-        print *, "Maximum change: ", diff
         x = new_x
         count = count + 1
 
     end do
 
-    print *, " "
-    print *, "Cartersian fiited after: ", count
-    print *, " "
-
 end subroutine find_opt_cart
 
-subroutine calculate_internal_gradient(n_x, n_q, b_l, a_l, d_l, vdw_l, i_coords, at_n)
+subroutine calculate_internal_gradient(n_x, n_q, b_l, a_l, d_l, vdw_l, i_coords, at_n, debug, final_coords)
     integer, intent(in) :: b_l(:, :), a_l(: ,:), d_l(:, :), vdw_l(:, :), at_n(:), n_q, n_x
     real*8, intent(in) :: i_coords(:)
+    real*8, intent(out) :: final_coords(n_x)
     real*8 :: B(n_q, n_x), inv_G(n_q, n_q), inv_hess(n_q, n_q), p_q(n_q), s_q(n_q)
     real*8  :: g_q(n_q), g_x(n_x), q(n_q), new_q(n_q), new_g_x(n_x), new_g_q(n_q)
     real*8  :: new_B(n_q, n_x), new_inv_G(n_q, n_q), y_q(n_q), v_q(n_q), new_inv_hess(n_q, n_q)
     real*8 :: lamda_max, l_q, tot_e, coords(n_x)
     real*8 :: new_tot_e, grms
-    integer :: i, num_at, count
+    logical :: debug
+    integer :: num_at, count, i
     ! This function performs the optimization in internal coordinates.
 
     coords = i_coords
@@ -541,7 +538,7 @@ subroutine calculate_internal_gradient(n_x, n_q, b_l, a_l, d_l, vdw_l, i_coords,
         s_q = scan_torsions(size(b_l, 1) + size(a_l, 1) + 1, s_q, n_q)
 
         call find_opt_cart(b_l, a_l, d_l, vdw_l, at_n, n_q, n_x, q, new_q, s_q, B, inv_G, coords)
-        ! CAREFUL, now v_coords and s_q are the updated because of the search for the optimal
+        ! CAREFUL, now coords and s_q are the updated because of the search for the optimal
         ! coordinates
         s_q = new_q - q
         s_q = scan_torsions(size(b_l, 1) + size(a_l, 1) + 1, s_q, n_q)
@@ -552,20 +549,9 @@ subroutine calculate_internal_gradient(n_x, n_q, b_l, a_l, d_l, vdw_l, i_coords,
         call calculate_total_energy(b_l, a_l, d_l, vdw_l, coords, at_n, new_tot_e) ! WARNING NO NEW_Q
         call calculate_cart_gradient(b_l, a_l, d_l, vdw_l, coords, at_n, new_g_x)
         new_g_q = matmul(matmul(new_inv_G, new_B), new_g_x)
-        
-        print *, "Old e", tot_e, "New e", new_tot_e
 
         ! Calculate the updated GRMS
         grms = sqrt( dot_product(new_g_x, new_g_x)/n_x )
-        print *, " "
-        print *, "grms:", grms
-
-        ! This is for debugging purposes
-        call print_vector(q, size(q))
-        call print_vector(new_q, size(q))
-        call print_vector(s_q, size(q))
-        call print_vector(g_q, size(q))
-        call print_vector(new_g_q, size(q))
 
         ! Calculate the y and v vectors
         y_q(:)= new_g_q - g_q
@@ -573,27 +559,46 @@ subroutine calculate_internal_gradient(n_x, n_q, b_l, a_l, d_l, vdw_l, i_coords,
         ! Update the hessian
         new_inv_hess = get_new_hessian(n_q, inv_hess, s_q, y_q, v_q)
 
-        call print_matrix(new_inv_hess, n_q)
+        ! Print more information if we have the debug variable as true
+        if (debug) then
+            write(12, *) "Updated coordinates: "
+            do i=1, num_at
+                write(12, "(3F12.6)") coords(3*i-2:3*i)
+            end do
+            write(12, *) " "
+            write(12, "(1X, A, F16.8, 1X, A, F16.8)") "Old energy:", tot_e, "New energy:", new_tot_e
+            write(12, *) " "
+            write(12, *) "The vector q: "
+            call print_vector(q, size(q))
+            write(12, *) "The updated vector q: "
+            call print_vector(new_q, size(q))
+            write(12, *) "The vector s_q: "
+            call print_vector(s_q, size(q))
+            write(12, *) "The gradient in internal coordinates: "
+            call print_vector(g_q, size(q))
+            write(12, *) "The updated gradient in internal coordinates: "
+            call print_vector(new_g_q, size(q))
+        end if
 
         ! Assign the variables for the new iteration
         inv_hess = new_inv_hess; g_q = new_g_q; q = new_q; tot_e = new_tot_e
         inv_G = new_inv_G; B = new_B
         count = count + 1
 
+        write(12, "(1X, A, I6, 1X, A, F12.4)") "Cycle: ", count, "GRMS: ", grms
+
     end do
 
-    !coords = retransform_matrix(v_coords, n_x)
+    write(12, *) " "
+    write(12, *) "######################################"
+    write(12, *) "Convergence criteria satisfied"
+    write(12, *) "######################################"
 
-    print *, " "
-    print *, "Final optimized energy", tot_e
-    print *, " "
-    print *, "Number of cycles: ", count
+    write(12, *) " "
+    write(12, "(1X, A, F18.8)") "Final optimized energy (kcal/mol): ", tot_e
+    write(12, *) "Total number of optimization cycles: ", count
 
-    print*, " "
-    print *, "Optimized coordinates"
-    do i=1, num_at
-        print "(3F12.6)", coords(3*i-2:3*i)
-    end do
+    final_coords = coords
 
 end subroutine calculate_internal_gradient
 
