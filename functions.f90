@@ -198,14 +198,16 @@ end subroutine get_dihedrals_list
 subroutine get_vdw_lists(bonds_list, angles_list, atom_num, vdw_lists)
     integer, intent(in) :: bonds_list(:, :), angles_list(:,:), atom_num
     integer, allocatable, intent(out) :: vdw_lists(:, :)
-    integer :: tmp(atom_num**2, 2), i, j, k, l, vdw_count
+    integer :: i, j, k, l, vdw_count, total_vdw_num
     logical :: no_bond, no_angle
     ! This function gets a list of the index of atoms that forms a 
     ! VdW interaction. We iterate over all the possible paris. 
     ! First we check if there is no bond, and if there is no bond
     ! then, we check if they form angle. If it does not, we add
-    ! the indexes to the list. We add them to a temporal list, 
-    ! and when we have all the interactions
+    ! the indexes to the list.
+
+    total_vdw_num = (atom_num*(atom_num-1)/2) - size(bonds_list, 1) - size(angles_list, 1)
+    allocate(vdw_lists(total_vdw_num, 2))
 
     vdw_count = 0
     do i=1, atom_num
@@ -234,19 +236,17 @@ subroutine get_vdw_lists(bonds_list, angles_list, atom_num, vdw_lists)
                         if ( vdw_count > atom_num**2 ) then
                             print *, "Warning, more vdw interactions than expected!"
                         end if
-                        tmp(vdw_count, :) = [i, j] 
+                        vdw_lists(vdw_count, :) = [i, j] 
                     end if
                 end if
             end if
         end do
     end do
 
-    allocate(vdw_lists(vdw_count, 2))
-
-    ! Add the VdW to the final list
-    do i=1, vdw_count
-        vdw_lists(i, :) = tmp(i, :)
-    end do
+    
+    print *, "Testing VdW"
+    print *, "The original program counted:", vdw_count
+    print *, "The new count is:", (atom_num*(atom_num-1)/2) - size(bonds_list, 1) - size(angles_list, 1)
 
 
 end subroutine get_vdw_lists
