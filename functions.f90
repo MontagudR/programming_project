@@ -206,6 +206,7 @@ subroutine get_vdw_lists(bonds_list, angles_list, atom_num, vdw_lists)
     ! then, we check if they form angle. If it does not, we add
     ! the indexes to the list.
 
+    ! Calculate the total number of VdW interactions.
     total_vdw_num = (atom_num*(atom_num-1)/2) - size(bonds_list, 1) - size(angles_list, 1)
     allocate(vdw_lists(total_vdw_num, 2))
 
@@ -233,7 +234,7 @@ subroutine get_vdw_lists(bonds_list, angles_list, atom_num, vdw_lists)
                     if (no_angle .eqv. .true.) then
                         vdw_count = vdw_count + 1
                         ! Failsafe
-                        if ( vdw_count > atom_num**2 ) then
+                        if ( vdw_count > total_vdw_num ) then
                             print *, "Warning, more vdw interactions than expected!"
                         end if
                         vdw_lists(vdw_count, :) = [i, j] 
@@ -242,12 +243,6 @@ subroutine get_vdw_lists(bonds_list, angles_list, atom_num, vdw_lists)
             end if
         end do
     end do
-
-    
-    print *, "Testing VdW"
-    print *, "The original program counted:", vdw_count
-    print *, "The new count is:", (atom_num*(atom_num-1)/2) - size(bonds_list, 1) - size(angles_list, 1)
-
 
 end subroutine get_vdw_lists
 
