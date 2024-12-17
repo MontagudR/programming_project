@@ -21,7 +21,7 @@ endif
 FFLAGS = -Wall -fbacktrace -fcheck=all
 
 # Name of the executable
-EXEC = opt
+EXEC = optimization
 
 # Object files
 OBJS = energy.o constants.o gradient.o functions.o main.o
